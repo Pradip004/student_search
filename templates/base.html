@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>{% block title %}Student Directory{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'records/site.css' %}">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="{% url 'search' %}">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>Student<span class="brand-light">Directory</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="{% url 'search' %}">Search</a>
+        <a href="{% url 'add_person' %}">Add / Import</a>
+        <a href="{% url 'remove_person' %}">Manage records</a>
+        <a href="{% url 'history' %}">History</a>
+      </nav>
+    </header>
+
+    <main class="page-content">
+      {% if messages %}
+        <div class="message-stack" aria-live="polite">
+          {% for message in messages %}
+            <div class="notice notice-{{ message.tags|default:'info' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <span>Student Directory</span>
+      <span>Search, manage, and organize people records.</span>
+    </footer>
+  </div>
+</body>
+</html>

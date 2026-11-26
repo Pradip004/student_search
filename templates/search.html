@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Search people · Student Directory{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <div>
+      <span class="eyebrow">People search</span>
+      <h1>Find the right person.</h1>
+      <p>Search your student and candidate records with a question or a list from a file.</p>
+    </div>
+    <a class="button button-primary" href="{% url 'add_person' %}">Add a person</a>
+  </section>
+
+  <div class="search-layout">
+    <section class="card">
+      <h2>Search the directory</h2>
+      <p class="card-intro">Try a name, department, course, year, or a natural-language question.</p>
+      <form class="search-form" method="get" action="{% url 'search' %}">
+        <label class="sr-only" for="people-query">Search records</label>
+        <input class="form-control" id="people-query" name="q" value="{{ q }}"
+               placeholder="e.g. active CSE students in year 3">
+        <button class="button button-primary" type="submit">Search</button>
+      </form>
+
+      <div class="upload-panel">
+        <h3>Search from a file</h3>
+        <p class="helper-text">Upload a list containing names or email addresses to find matching records.</p>
+        <form class="upload-form" method="post" action="{% url 'search_upload' %}"
+              enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="file-control">
+            <label for="{{ upload_form.upload_file.id_for_label }}">People file</label>
+            {{ upload_form.upload_file }}
+            {{ upload_form.upload_file.errors }}
+          </div>
+          <button class="button button-secondary" type="submit">Search file</button>
+        </form>
+        <p class="helper-text">CSV, XLSX, JSON, TXT, DOCX, text-based PDF, or common images · 5 MB max</p>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2>Search history</h2>
+      <p class="card-intro">Your recent text searches, ready to run again.</p>
+      <div class="history-list">
+        {% for item in search_history %}
+          <a class="history-item" href="{% url 'search' %}?q={{ item.query_text|urlencode }}">
+            <strong>{{ item.query_text }}</strong>
+            <span>{{ item.result_count }} result(s)</span>
+          </a>
+        {% empty %}
+          <div class="empty-state">No searches yet.</div>
+        {% endfor %}
+      </div>
+      <p class="helper-text"><a href="{% url 'history' %}">View all search history</a></p>
+    </aside>
+  </div>
+
+  {% if q or file_search %}
+    <section class="card results-card">
+      <div class="results-heading">
+        <div>
+          <h2>Search results</h2>
+          {% if file_search %}
+            <div class="results-meta">
+              File match{% if file_name %} · {{ file_name }}{% endif %}
+              · {{ result_count }} result(s)
+            </div>
+          {% else %}
+            <div class="results-meta">{{ mode }} · {{ result_count }} result(s) for “{{ q }}”</div>
+          {% endif %}
+        </div>
+        {% if history and not file_search and result_count %}
+          <div class="export-links" aria-label="Download search results">
+            <a class="button button-secondary button-small" href="{% url 'export' history.id 'xlsx' %}">Excel</a>
+            <a class="button button-secondary button-small" href="{% url 'export' history.id 'docx' %}">Word</a>
+            <a class="button button-secondary button-small" href="{% url 'export' history.id 'pdf' %}">PDF</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if results %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Type</th><th>Name</th><th>Email</th><th>Phone</th>
+                  <th>Department</th><th>Course</th><th>Year</th>
+                  <th>Designation</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for person in results %}
+                <tr>
+                  <td>{{ person.get_person_type_display }}</td>
+                  <td><strong>{{ person.name }}</strong></td>
+                  <td>{{ person.email|default:"—" }}</td>
+                  <td>{{ person.phone|default:"—" }}</td>
+                  <td>{{ person.department|default:"—" }}</td>
+                  <td>{{ person.course|default:"—" }}</td>
+                  <td>{{ person.year|default_if_none:"—" }}</td>
+                  <td>{{ person.designation|default:"—" }}</td>
+                  <td>{{ person.status }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          No matching records found.
+          {% if file_search %}<p>Check that the uploaded file contains names or email addresses.</p>{% endif %}
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+{% endblock %}

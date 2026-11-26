@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Add or import people · Student Directory{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <div>
+      <span class="eyebrow">Record management</span>
+      <h1>Add people</h1>
+      <p>Create one record manually or import a prepared file. Existing email addresses are skipped during import.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'remove_person' %}">Manage records</a>
+  </section>
+
+  <div class="management-grid">
+    <section class="card">
+      <h2>Add one person</h2>
+      <p class="card-intro">Enter a student, candidate, or employee record.</p>
+      <form method="post" action="{% url 'add_person' %}">
+        {% csrf_token %}
+        <div class="form-grid">
+          {{ form.as_p }}
+        </div>
+        <div class="form-actions">
+          <button class="button button-primary" type="submit">Save person</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card import-card">
+      <h2>Import from a file</h2>
+      <p class="card-intro">Import up to 1,000 people at a time. If any row is invalid, the import is cancelled so you can correct the whole file.</p>
+
+      <div class="format-list" aria-label="Supported formats">
+        <span class="format-chip">CSV</span>
+        <span class="format-chip">XLSX</span>
+        <span class="format-chip">JSON</span>
+        <span class="format-chip">DOCX</span>
+        <span class="format-chip">PDF*</span>
+        <span class="format-chip">TXT</span>
+        <span class="format-chip">PNG / JPG / WEBP / BMP / TIFF*</span>
+      </div>
+
+      <form method="post" action="{% url 'import_people' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="file-control">
+          <label for="{{ upload_form.upload_file.id_for_label }}">Choose a file (5 MB maximum)</label>
+          {{ upload_form.upload_file }}
+          {{ upload_form.upload_file.errors }}
+        </div>
+        <div class="form-actions">
+          <button class="button button-primary" type="submit">Validate and import</button>
+        </div>
+      </form>
+
+      <ul class="import-notes">
+        <li>CSV, Excel, and JSON files need columns/keys such as <code>person_type</code>, <code>name</code>, <code>email</code>, <code>phone</code>, <code>department</code>, <code>course</code>, <code>year</code>, <code>designation</code>, and <code>status</code>.</li>
+        <li>DOCX tables need a header row. Text documents can use one <code>Field: value</code> per line, with a blank line between people.</li>
+        <li>*PDFs need selectable text. Common image formats use local OCR and require Tesseract installed on this computer.</li>
+        <li>Files are processed locally. Records with email addresses already in the directory are skipped.</li>
+      </ul>
+    </section>
+  </div>
+{% endblock %}
