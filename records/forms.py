@@ -32,3 +32,10 @@ class PeopleUploadForm(forms.Form):
             }
         ),
     )
+
+
+class PeopleImportForm(PeopleUploadForm):
+    person_type = forms.ChoiceField(
+        choices=[("", "Choose a category")] + Person.TYPE,
+        label="Default category for rows without one",
+    )

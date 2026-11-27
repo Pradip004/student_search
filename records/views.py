@@ -6,7 +6,7 @@ from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from .file_uploads import UploadFileError, parse_people_upload
-from .forms import PeopleUploadForm, PersonForm
+from .forms import PeopleImportForm, PeopleUploadForm, PersonForm
 from .models import Person, SearchHistory
 from .llm import ask_ai, build_queryset
 from . import exports
@@ -129,6 +129,18 @@ def history_list(request):
     return render(request, "history.html", {"items": items})
 
 
+@require_POST
+def delete_search_history(request, history_id):
+    item = get_object_or_404(
+        SearchHistory,
+        id=history_id,
+        session_key=get_session_key(request),
+    )
+    item.delete()
+    messages.success(request, "Search history entry deleted.")
+    return redirect("history")
+
+
 def add_person(request):
     form = PersonForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -138,26 +150,36 @@ def add_person(request):
     return render(
         request,
         "add_person.html",
-        {"form": form, "upload_form": PeopleUploadForm()},
+        {
+            "form": form,
+            "upload_form": PeopleUploadForm(),
+            "import_form": PeopleImportForm(),
+        },
     )
 
 
 @require_POST
 def import_people(request):
-    upload_form = PeopleUploadForm(request.POST, request.FILES)
-    if not upload_form.is_valid():
-        messages.error(request, "Choose a file before importing records.")
+    import_form = PeopleImportForm(request.POST, request.FILES)
+    if not import_form.is_valid():
+        messages.error(
+            request,
+            "Choose a file and a default category before importing records.",
+        )
         return redirect("add_person")
 
     try:
-        records = parse_people_upload(upload_form.cleaned_data["upload_file"])
+        records = parse_people_upload(import_form.cleaned_data["upload_file"])
     except UploadFileError as error:
         messages.error(request, str(error))
         return redirect("add_person")
 
+    default_person_type = import_form.cleaned_data["person_type"]
     valid_forms = []
     invalid_rows = []
     for row_number, record in enumerate(records, start=2):
+        if not record.get("person_type", "").strip():
+            record["person_type"] = default_person_type
         form = PersonForm(record)
         if form.is_valid():
             valid_forms.append((row_number, form))
@@ -207,6 +229,20 @@ def import_people(request):
             f"Skipped {skipped} record(s) with duplicate email addresses.",
         )
     return redirect("add_person")
+
+
+def edit_person(request, person_id):
+    person = get_object_or_404(Person, id=person_id)
+    form = PersonForm(request.POST or None, instance=person)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Person details updated.")
+        return redirect("remove_person")
+    return render(
+        request,
+        "person_form.html",
+        {"form": form, "person": person},
+    )
 
 
 def remove_person(request):

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Edit person · Student Directory{% endblock %}
+
+{% block content %}
+  <section class="page-heading">
+    <div>
+      <span class="eyebrow">Record management</span>
+      <h1>Edit person</h1>
+      <p>Update details for {{ person.name }}.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'remove_person' %}">Back to records</a>
+  </section>
+
+  <section class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        {{ form.as_p }}
+      </div>
+      <div class="form-actions">
+        <button class="button button-primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

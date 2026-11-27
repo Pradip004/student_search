@@ -29,7 +29,7 @@
 
     <section class="card import-card">
       <h2>Import from a file</h2>
-      <p class="card-intro">Import up to 1,000 people at a time. If any row is invalid, the import is cancelled so you can correct the whole file.</p>
+      <p class="card-intro">Import up to 1,000 people at a time. Choose a default category for rows that do not include one. If any row is invalid, the import is cancelled so you can correct the whole file.</p>
 
       <div class="format-list" aria-label="Supported formats">
         <span class="format-chip">CSV</span>
@@ -44,9 +44,14 @@
       <form method="post" action="{% url 'import_people' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="file-control">
-          <label for="{{ upload_form.upload_file.id_for_label }}">Choose a file (5 MB maximum)</label>
-          {{ upload_form.upload_file }}
-          {{ upload_form.upload_file.errors }}
+          <label for="{{ import_form.person_type.id_for_label }}">Default category</label>
+          {{ import_form.person_type }}
+          {{ import_form.person_type.errors }}
+        </div>
+        <div class="file-control">
+          <label for="{{ import_form.upload_file.id_for_label }}">Choose a file (5 MB maximum)</label>
+          {{ import_form.upload_file }}
+          {{ import_form.upload_file.errors }}
         </div>
         <div class="form-actions">
           <button class="button button-primary" type="submit">Validate and import</button>
@@ -54,7 +59,7 @@
       </form>
 
       <ul class="import-notes">
-        <li>CSV, Excel, and JSON files need columns/keys such as <code>person_type</code>, <code>name</code>, <code>email</code>, <code>phone</code>, <code>department</code>, <code>course</code>, <code>year</code>, <code>designation</code>, and <code>status</code>.</li>
+        <li>CSV, Excel, and JSON files need columns/keys such as <code>name</code>, <code>email</code>, <code>phone</code>, <code>department</code>, <code>course</code>, <code>year</code>, <code>designation</code>, and <code>status</code>. A file may include <code>person_type</code>; otherwise, the selected default category is used.</li>
         <li>DOCX tables need a header row. Text documents can use one <code>Field: value</code> per line, with a blank line between people.</li>
         <li>*PDFs need selectable text. Common image formats use local OCR and require Tesseract installed on this computer.</li>
         <li>Files are processed locally. Records with email addresses already in the directory are skipped.</li>

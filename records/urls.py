@@ -9,11 +9,21 @@ urlpatterns = [
 
     # Search history page
     path('history/', views.history_list, name='history'),
+    path(
+        'history/<int:history_id>/delete/',
+        views.delete_search_history,
+        name='delete_search_history'
+    ),
 
     # Add and remove student/candidate records
     path('people/add/', views.add_person, name='add_person'),
     path('people/import/', views.import_people, name='import_people'),
     path('people/remove/', views.remove_person, name='remove_person'),
+    path(
+        'people/<int:person_id>/edit/',
+        views.edit_person,
+        name='edit_person'
+    ),
     path(
         'people/<int:person_id>/delete/',
         views.delete_person,

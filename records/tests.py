@@ -1,5 +1,5 @@
 import io
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
 
@@ -48,6 +48,48 @@ class SearchHistorySidebarTests(TestCase):
 
         self.assertContains(response, "biology")
         self.assertEqual(response.context["search_history"].count(), 1)
+
+    def test_history_entry_can_be_deleted_only_by_its_session(self):
+        self.client.get("/")
+        session_key = self.client.session.session_key
+        item = SearchHistory.objects.create(
+            session_key=session_key,
+            query_text="biology",
+            filters={"_keyword": "biology"},
+        )
+
+        response = self.client.post(f"/history/{item.id}/delete/")
+
+        self.assertRedirects(response, "/history/")
+        self.assertFalse(SearchHistory.objects.filter(id=item.id).exists())
+
+    def test_history_entry_cannot_be_deleted_with_get(self):
+        self.client.get("/")
+        item = SearchHistory.objects.create(
+            session_key=self.client.session.session_key,
+            query_text="biology",
+            filters={"_keyword": "biology"},
+        )
+
+        response = self.client.get(f"/history/{item.id}/delete/")
+
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(SearchHistory.objects.filter(id=item.id).exists())
+
+    def test_history_entry_cannot_be_deleted_from_another_session(self):
+        self.client.get("/")
+        item = SearchHistory.objects.create(
+            session_key=self.client.session.session_key,
+            query_text="biology",
+            filters={"_keyword": "biology"},
+        )
+        other_client = Client()
+        other_client.get("/")
+
+        response = other_client.post(f"/history/{item.id}/delete/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(SearchHistory.objects.filter(id=item.id).exists())
 
 
 class PersonManagementTests(TestCase):
@@ -109,6 +151,29 @@ class PersonManagementTests(TestCase):
         self.assertRedirects(post_response, "/people/remove/")
         self.assertFalse(Person.objects.filter(id=person.id).exists())
 
+    def test_person_details_can_be_edited(self):
+        person = Person.objects.create(
+            person_type="student",
+            name="Ravi",
+            email="ravi@example.com",
+        )
+
+        response = self.client.post(
+            f"/people/{person.id}/edit/",
+            {
+                "person_type": "candidate",
+                "name": "Ravi Kumar",
+                "email": "ravi.kumar@example.com",
+                "status": "active",
+            },
+        )
+
+        self.assertRedirects(response, "/people/remove/")
+        person.refresh_from_db()
+        self.assertEqual(person.name, "Ravi Kumar")
+        self.assertEqual(person.person_type, "candidate")
+        self.assertEqual(person.email, "ravi.kumar@example.com")
+
 
 class PeopleFileUploadTests(TestCase):
     def test_csv_search_matches_uploaded_names_and_emails(self):
@@ -149,7 +214,7 @@ class PeopleFileUploadTests(TestCase):
 
         response = self.client.post(
             "/people/import/",
-            {"upload_file": upload},
+            {"upload_file": upload, "person_type": "student"},
             follow=True,
         )
 
@@ -166,12 +231,38 @@ class PeopleFileUploadTests(TestCase):
 
         response = self.client.post(
             "/people/import/",
-            {"upload_file": upload},
+            {"upload_file": upload, "person_type": "student"},
             follow=True,
         )
 
         self.assertContains(response, "No records were saved.")
         self.assertEqual(Person.objects.count(), 0)
+
+    def test_import_uses_selected_category_only_when_file_omits_it(self):
+        upload = SimpleUploadedFile(
+            "people.csv",
+            (
+                b"name,email,person_type\n"
+                b"Missing Type,missing@example.com,\n"
+                b"Existing Type,existing@example.com,employee\n"
+            ),
+        )
+
+        response = self.client.post(
+            "/people/import/",
+            {"upload_file": upload, "person_type": "candidate"},
+            follow=True,
+        )
+
+        self.assertContains(response, "Imported 2 person record")
+        self.assertEqual(
+            Person.objects.get(name="Missing Type").person_type,
+            "candidate",
+        )
+        self.assertEqual(
+            Person.objects.get(name="Existing Type").person_type,
+            "employee",
+        )
 
     def test_json_upload_is_normalized_to_person_fields(self):
         upload = SimpleUploadedFile(

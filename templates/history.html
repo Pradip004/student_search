@@ -16,7 +16,7 @@
     {% if items %}
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Date</th><th>Search</th><th>Results</th><th>Downloads</th></tr></thead>
+          <thead><tr><th>Date</th><th>Search</th><th>Results</th><th>Downloads</th><th>Action</th></tr></thead>
           <tbody>
             {% for item in items %}
               <tr>
@@ -29,6 +29,12 @@
                     <a href="{% url 'export' item.id 'docx' %}">Word</a>
                     <a href="{% url 'export' item.id 'pdf' %}">PDF</a>
                   </div>
+                </td>
+                <td>
+                  <form method="post" action="{% url 'delete_search_history' item.id %}">
+                    {% csrf_token %}
+                    <button class="button button-danger button-small" type="submit">Delete</button>
+                  </form>
                 </td>
               </tr>
             {% endfor %}

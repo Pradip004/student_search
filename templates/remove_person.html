@@ -24,7 +24,7 @@
         <table>
           <thead>
             <tr><th>Type</th><th>Name</th><th>Email</th><th>Phone</th>
-                <th>Department</th><th>Course</th><th>Year</th><th>Action</th></tr>
+                <th>Department</th><th>Course</th><th>Year</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {% for person in people %}
@@ -37,11 +37,14 @@
                 <td>{{ person.course|default:"—" }}</td>
                 <td>{{ person.year|default_if_none:"—" }}</td>
                 <td>
-                  <form method="post" action="{% url 'delete_person' person.id %}"
-                        onsubmit="return confirm('Remove this record?');">
-                    {% csrf_token %}
-                    <button class="button button-danger button-small" type="submit">Remove</button>
-                  </form>
+                  <div class="export-links">
+                    <a class="button button-secondary button-small" href="{% url 'edit_person' person.id %}">Edit</a>
+                    <form method="post" action="{% url 'delete_person' person.id %}"
+                          onsubmit="return confirm('Remove this record?');">
+                      {% csrf_token %}
+                      <button class="button button-danger button-small" type="submit">Remove</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             {% endfor %}
