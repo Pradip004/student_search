@@ -29,6 +29,8 @@ a:hover { color: var(--brand-dark); text-decoration: underline; }
 button, input, select { font: inherit; }
 button, .button { cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.skip-link { position: fixed; z-index: 1000; top: 10px; left: 10px; padding: 10px 14px; border-radius: 8px; background: var(--ink); color: white; transform: translateY(-150%); }
+.skip-link:focus { transform: translateY(0); color: white; }
 code { padding: 2px 5px; border-radius: 4px; background: #f0f2f7; color: #35415a; font-size: .9em; }
 
 .site-shell { min-height: 100vh; display: flex; flex-direction: column; }
@@ -101,6 +103,7 @@ tbody tr:hover { background: #fafbfe; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .form-grid p { min-width: 0; margin: 0; }
 .form-grid label, .file-control label { display: block; margin-bottom: 6px; color: #38445c; font-size: 13px; font-weight: 700; }
+.file-control + .file-control { margin-top: 16px; }
 .form-control, input[type="text"], input[type="email"], input[type="number"], input[type="search"], input[type="file"], select, textarea {
   width: 100%;
   min-height: 43px;
@@ -128,6 +131,8 @@ input[type="file"] { padding: 7px; color: var(--muted); }
 .notice-warning { border-color: #f5dfac; background: #fffaf0; color: #815d0a; }
 .notice-info { border-color: #cbd6ff; background: #f4f6ff; color: #304ca8; }
 .message-stack { margin-bottom: 20px; }
+.history-page-links { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.history-page-links a { font-size: 13px; font-weight: 700; }
 .site-footer { display: flex; justify-content: space-between; gap: 16px; padding: 18px max(24px, calc((100% - 1180px) / 2)); border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 .empty-state p { margin: 6px 0 0; }
 
@@ -140,7 +145,7 @@ input[type="file"] { padding: 7px; color: var(--muted); }
   .site-header { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px 20px; }
   .main-nav { width: 100%; gap: 2px; }
   .main-nav a { padding: 8px 9px; font-size: 13px; }
-  .page-content { width: min(100% - 28px, 1180px); margin-top: 28px; }
+  .page-content { width: min(calc(100% - 28px), 1180px); margin-top: 28px; }
   .page-heading, .results-heading { align-items: flex-start; flex-direction: column; }
   .card { padding: 18px; border-radius: 13px; }
   .search-form, .upload-form { align-items: stretch; flex-direction: column; }

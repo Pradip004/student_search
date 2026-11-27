@@ -16,7 +16,8 @@
     {% if items %}
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Date</th><th>Search</th><th>Results</th><th>Downloads</th><th>Action</th></tr></thead>
+          <caption class="sr-only">Saved search history</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col">Search</th><th scope="col">Results</th><th scope="col">Downloads</th><th scope="col">Action</th></tr></thead>
           <tbody>
             {% for item in items %}
               <tr>
@@ -24,7 +25,7 @@
                 <td><a href="{% url 'search' %}?q={{ item.query_text|urlencode }}">{{ item.query_text }}</a></td>
                 <td>{{ item.result_count }}</td>
                 <td>
-                  <div class="export-links">
+                  <div class="history-page-links">
                     <a href="{% url 'export' item.id 'xlsx' %}">Excel</a>
                     <a href="{% url 'export' item.id 'docx' %}">Word</a>
                     <a href="{% url 'export' item.id 'pdf' %}">PDF</a>
